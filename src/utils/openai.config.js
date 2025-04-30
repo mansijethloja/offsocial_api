@@ -1,5 +1,3 @@
-const { ChatOpenAI } = require('@langchain/openai');
-
 // Lazy initialization of OpenAI client with best practices
 exports.getOpenAIClient = () => {
   return new OpenAI({

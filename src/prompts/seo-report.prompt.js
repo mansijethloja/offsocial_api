@@ -9,24 +9,6 @@ const CWV_REPORT_PROMPT = `You are a web performance expert. Analyze the JSON da
 Here is the data:
 `;
 
-const PERFORMANCE_REPORT_PROMPT = `Generate a detailed SEO performance audit report based on the provided Lighthouse audit JSON data. Ensure that the report is technical, structured, and easy to understand. The report should cover key performance metrics with sub-points where necessary. Avoid overview,introduction or conclusion. Just add title as 'Other Web Vital Report'. The format should be structured as follows:
-- Metric Name (e.g., Largest Contentful Paint)
-  - Description: A brief explanation of the metric and why it matters.
-  - Score: Provide the score if available (on a scale from 0 to 1).
-  - Performance Value: Display actual numeric values (e.g., in milliseconds) if available.
-  - Findings: Provide insights into performance, including potential issues and strengths.
-  - Recommendations: Offer actionable improvements where applicable.
-`;
-
-const SEO_REPORT_PROMPT = `Generate a detailed SEO performance audit report based on the provided Lighthouse audit JSON data. Ensure that the report is technical, structured, and easy to understand. The report should cover key performance metrics with sub-points where necessary. Avoid overview,introduction or conclusion. Just add title as 'SEO Report'. The format should be structured as follows:
-- Metric Name (e.g., Largest Contentful Paint)
-  - Description: A brief explanation of the metric and why it matters.
-  - Score: Provide the score if available (on a scale from 0 to 1).
-  - Performance Value: Display actual numeric values (e.g., in milliseconds) if available.
-  - Findings: Provide insights into performance, including potential issues and strengths.
-  - Recommendations: Offer actionable improvements where applicable.
-`;
-
 const SEO_CONTENT_REPORT_PROMPT = `You are an SEO expert. Audit the provided HTML for key SEO elements in these categories:
 1. Meta elements (title, description, robots, canonical, language, OG tags)
 2. Content structure (H1, H2/H3 tags, readability, depth, keywords, CTAs)
@@ -57,10 +39,21 @@ Analyze the provided website HTML content for content quality, keyword strategy,
 - Content Strategy Signals: Check content structure, topical coverage, semantic keyword usage, E-E-A-T signals (Experience, Expertise, Authority, Trust), internal linking quality, content freshness, CTA clarity, and any content gaps.
 `;
 
+
+const SYSTEM_CONTENT_ANALYSIS_PROMPT = `Act as SEO expert and do the content analysis based on the content scrapped from the website. Provide a comprehensive SEO audit in JSON with this structure: 
+[
+  {
+    "contentAnalyzed": "<Part being analyzed. Do not modify this>",
+    "issues": "<SEO or readability issues>",
+    "improvements": "<Actionable suggestions>",
+    "reason": "<Why improvement is needed>"
+  }
+]
+Focus on content effectiveness and clarity. Make sure no paragraphs are missed while analysing. Return only the JSON array, without extra explanation.`
+
 module.exports = {
   CWV_REPORT_PROMPT,
-  PERFORMANCE_REPORT_PROMPT,
-  SEO_REPORT_PROMPT,
   SEO_CONTENT_REPORT_PROMPT,
   CONTENT_ANALYSIS_REPORT_PROMPT,
+  SYSTEM_CONTENT_ANALYSIS_PROMPT
 };
