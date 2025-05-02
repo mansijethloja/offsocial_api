@@ -1,29 +1,42 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
 
-const scrapeDynamicSite = async (url) => {
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-    await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+async function scrapeDynamicSite(url) {
+  const browser = await puppeteer.launch({ headless: "new" });
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: "networkidle2" });
+
+  const result = await page.evaluate(() => {
+    function getHeadingLevel(tagName) {
+      return tagName === "H1" ? 1 : tagName === "H2" ? 2 : null;
+    }
+
+    const sections = [];
+    let currentSection = { heading: "General", content: [] };
+    sections.push(currentSection);
+
+    const elements = Array.from(
+      document.body.querySelectorAll("h1, h2, p, div")
     );
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    const data = await page.evaluate(() => {
-        const title = document.title;
-        const description = document.querySelector('meta[name="description"]')?.content || '';
-        const headings = Array.from(document.querySelectorAll('h1, h2, h3')).map(h => h.innerText.trim());
-        const paragraphs = Array.from(document.querySelectorAll('p')).map(p => p.innerText.trim()).filter(Boolean);
+    for (const el of elements) {
+      const tag = el.tagName.toUpperCase();
+      const text = el.innerText.trim();
 
-        return {
-            title,
-            description,
-            headings,
-            paragraphs
-        };
-    });
+      if (!text) continue;
 
-    await browser.close();
-    return { content: data };
+      if (tag === "H1" || tag === "H2") {
+        currentSection = { heading: text, content: [] };
+        sections.push(currentSection);
+      } else if (tag === "P" || tag === "DIV") {
+        currentSection.content.push(text);
+      }
+    }
+
+    return { sections };
+  });
+
+  await browser.close();
+  return result;
 }
 
 module.exports = { scrapeDynamicSite };

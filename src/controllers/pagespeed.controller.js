@@ -5,6 +5,7 @@ const {
 const { scrapeHTMLContent } = require("../services/htmlScraper.service");
 const { fetchPageSpeedData } = require("../services/pagespeed.service");
 const { scrapeDynamicSite } = require("../services/scrape.service");
+const { scrapeSEO } = require("../services/scrape_seo.service");
 const {
   generateTextReport,
   generateJsonReport,
@@ -108,7 +109,7 @@ const getContent = async (req, res) => {
   try {
     const { url } = req.body;
 
-    const content = await scrapeDynamicSite(url);
+    const content = await scrapeSEO(url);
 
     const report = await generateJsonReport(
       content,
