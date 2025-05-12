@@ -72,8 +72,41 @@ ${JSON.stringify(inputData)}`;
   }
 };
 
+const generateSeoBlog = async ({ topic, keyword, audience }) => {
+  const prompt = `
+Write a detailed, SEO-optimized blog post on the topic: "${topic}".
+Follow these strict guidelines:
+- Target Audience: ${audience}
+- Word Count: 1000-1200 words.
+- Tone: Professional but conversational.
+- SEO Requirements:
+  - Include the primary keyword "${keyword}" at least 6 times.
+  - Include at least 3 related keywords or long-tail variations naturally.
+  - Use proper H1 for title, H2/H3 headings for sections.
+  - Add a meta description (under 160 characters) at the top.
+  - Use bullet points or numbered lists where helpful.
+  - End with a clear call to action (CTA).
+⚠️ Do NOT:
+- Use AI disclaimers.
+- Add irrelevant fluff or generic content.
+- Use repeated phrases or filler.
+✅ You MUST:
+- Start with a compelling hook.
+- Provide unique insights, examples, or data.
+- Ensure originality. Do not plagiarize.
+`;
+
+  const response = await model.invoke([
+    { role: "system", content: "You are an SEO expert." },
+    { role: "user", content: prompt },
+  ]);
+
+  return response.content;
+};
+
 module.exports = {
   generateTextReport,
   generateBlogTopicSuggestion,
   generateJsonReport,
+  generateSeoBlog,
 };

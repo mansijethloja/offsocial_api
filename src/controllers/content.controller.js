@@ -16,6 +16,7 @@ const {
 const {
   generateTextReport,
   generateJsonReport,
+  generateSeoBlog,
 } = require("../services/openai.service");
 const {
   generateContentSuggestionsFromAnalysis,
@@ -161,9 +162,27 @@ const getBlogTopicSuggestion = async (req, res) => {
   }
 };
 
+const handleGenerateBlog = async (req, res) => {
+  try {
+    const { topic, keyword, audience } = req.body;
+
+    if (!topic || !keyword || !audience) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const blog = await generateSeoBlog({ topic, keyword, audience });
+
+    res.status(200).json({ blog });
+  } catch (error) {
+    console.error("Blog generation error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getContent,
   getImprovedContentSuggestions,
   getImprovedHeadingSuggestions,
   getBlogTopicSuggestion,
+  handleGenerateBlog,
 };
