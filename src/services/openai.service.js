@@ -1,8 +1,5 @@
 require("dotenv").config();
 const { ChatOpenAI } = require("@langchain/openai");
-const { StructuredOutputParser } = require("langchain/output_parsers");
-const { z } = require("zod");
-const { CWV_REPORT_PROMPT } = require("../prompts/seo-report.prompt");
 
 // Initialize LangChain model
 const model = new ChatOpenAI({
@@ -16,9 +13,31 @@ const model = new ChatOpenAI({
  * @param {Object} pageSpeedData - JSON data from Google PageSpeed Insights
  * @returns {Promise<string>}
  */
-const generateTextReport = async (pageSpeedData) => {
-  const prompt = `${CWV_REPORT_PROMPT}
+const generateTextReport = async (pageSpeedData, promptMessage) => {
+  const prompt = `${promptMessage}
   ${JSON.stringify(pageSpeedData)}`;
+
+  const result = await model.invoke([
+    { role: "system", content: "You are an SEO expert." },
+    { role: "user", content: prompt },
+  ]);
+
+  return result.content;
+};
+
+/**
+ * Generates a textual Blog topic report using LangChain
+ * @param {Object} content1 - JSON data from Google PageSpeed Insights
+ * @returns {Promise<string>}
+ */
+const generateBlogTopicSuggestion = async (
+  content1,
+  content2,
+  promptMessage
+) => {
+  const prompt = `${promptMessage}
+  ${JSON.stringify(content1)}
+  ${JSON.stringify(content2)}`;
 
   const result = await model.invoke([
     { role: "system", content: "You are an SEO expert." },
@@ -55,5 +74,6 @@ ${JSON.stringify(inputData)}`;
 
 module.exports = {
   generateTextReport,
+  generateBlogTopicSuggestion,
   generateJsonReport,
 };
