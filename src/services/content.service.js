@@ -1,20 +1,26 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const {
+  generateJsonReport,
+  generateBlogTopicSuggestion,
+} = require("./openai.service");
 
 /**
  * Scrape and analyze a website for SEO purposes, supporting both static and JS-rendered content.
  * @param {string} url - The website URL to analyze.
- * @returns {Promise<{title: string, meta: Array<{name: string, content: string}>, paragraphs: Array<{heading: string, content: string}>}>}
+ * @returns {Promise<{title: string, meta: Array<{name: string, content: string}>, paragraphs: Array<{heading: string, content: string}>, internalLinks: Array<{href: string, anchor: string}>}>}
  */
-async function scrapeSEO(url) {
+async function scrapeContent(url) {
   // Use Puppeteer to render the page
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
   await page.setUserAgent("Mozilla/5.0 (compatible; SEOAnalyzer/1.0)");
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
   // Wait for root/main content to appear (heuristic, fallback to body)
-  await new Promise(res => setTimeout(res, 3000));
+  await new Promise((res) => setTimeout(res, 3000));
   const html = await page.content();
+  const { origin } = new URL(url);
+
   await browser.close();
 
   const $ = cheerio.load(html);
@@ -34,6 +40,34 @@ async function scrapeSEO(url) {
     const content = $(el).attr("content") || "";
     if (name && content) {
       meta.push({ name, content });
+    }
+  });
+
+  // Extract all h1–h6 headings from the page
+  const allHeadings = [];
+  ["h1", "h2", "h3", "h4", "h5", "h6"].forEach((tag) => {
+    $(tag).each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim();
+      if (text) {
+        allHeadings.push({ tag, text });
+      }
+    });
+  });
+
+  const internalLinks = [];
+  $("a[href]").each((_, el) => {
+    const href = $(el).attr("href");
+    const anchor = $(el).text().replace(/\s+/g, " ").trim();
+    if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
+
+    try {
+      const linkUrl = new URL(href, origin);
+      if (linkUrl.origin === origin) {
+        internalLinks.push({ href: linkUrl.href, anchor });
+      }
+    } catch (e) {
+      // Skip invalid URLs
+      console.log("Invalid URL:", e);
     }
   });
 
@@ -71,7 +105,50 @@ async function scrapeSEO(url) {
     return true;
   });
 
-  return { title, meta, paragraphs: dedupedParagraphs };
+  return {
+    title,
+    allHeadings,
+    meta,
+    internalLinks,
+    paragraphs: dedupedParagraphs,
+  };
 }
 
-module.exports = { scrapeSEO };
+async function generateSuggestionsFromAnalysis(contentArray, prompt) {
+  const rawResponse = await generateJsonReport(contentArray, prompt);
+
+  let rawOutput = rawResponse; // Whatever the raw string from the LLM is
+
+  // Remove Markdown-style code block if present
+  rawOutput = rawOutput.replace(/```json|```/g, "").trim();
+
+  let parsedSuggestions;
+  try {
+    parsedSuggestions = JSON.parse(rawOutput);
+    return parsedSuggestions;
+  } catch (error) {
+    console.error("Cleaned Output:", rawOutput);
+    throw new Error("Invalid response format from language model");
+  }
+}
+
+const generateBlogTopicReport = async (headingArray, contentArray, prompt) => {
+  const rawResponse = await generateBlogTopicSuggestion(
+    headingArray,
+    contentArray,
+    prompt
+  );
+
+  try {
+    return rawResponse;
+  } catch (error) {
+    console.error("Cleaned Output:", rawResponse);
+    throw new Error("Invalid response format from language model");
+  }
+};
+
+module.exports = {
+  scrapeContent,
+  generateSuggestionsFromAnalysis,
+  generateBlogTopicReport,
+};

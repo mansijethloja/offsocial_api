@@ -1,17 +1,22 @@
-const {
-  SEO_CONTENT_REPORT_PROMPT,
-  SYSTEM_CONTENT_ANALYSIS_PROMPT,
-} = require("../prompts/seo-report.prompt");
-const { scrapeHTMLContent } = require("../services/htmlScraper.service");
+const { CWV_REPORT_PROMPT } = require("../prompts/seo-report.prompt");
 const { fetchPageSpeedData } = require("../services/pagespeed.service");
-const { scrapeDynamicSite } = require("../services/scrape.service");
-const { scrapeSEO } = require("../services/scrape_seo.service");
-const {
-  generateTextReport,
-  generateJsonReport,
-} = require("../services/seo.service");
-const axios = require("axios");
+const { generateTextReport } = require("../services/openai.service");
 
+/**
+ * Analyzes the performance of a given URL using PageSpeed Insights.
+ *
+ * @param {Object} req - Express request object. Expects req.body.url and req.body.category as the target URL and category to analyze.
+ * @param {Object} res - Express response object.
+ *
+ * Input:
+ *   - req.body.url: {string} The URL of the page to analyze.
+ *   - req.body.category: {string} The category of analysis ("core-web-vitals" or "resource-efficiency").
+ *
+ * Output (JSON response):
+ *   - coreWebVitals: {string} Human-readable report for core web vitals.
+ *   - resourceEfficiency: {string} Human-readable report for resource efficiency.
+ *   - On error: { error: string } with error details.
+ */
 const analyzePageSpeed = async (req, res) => {
   try {
     const { url, category } = req.body;
@@ -45,8 +50,14 @@ const analyzePageSpeed = async (req, res) => {
         data.lighthouseResult.audits["uses-optimized-images"],
     };
 
-    const cwvReport = await generateTextReport(cwvFilteredData);
-    const owvReport = await generateTextReport(owvFilteredData);
+    const cwvReport = await generateTextReport(
+      cwvFilteredData,
+      CWV_REPORT_PROMPT
+    );
+    const owvReport = await generateTextReport(
+      owvFilteredData,
+      CWV_REPORT_PROMPT
+    );
 
     res.status(200).json({
       coreWebVitals: cwvReport,
@@ -60,6 +71,20 @@ const analyzePageSpeed = async (req, res) => {
   }
 };
 
+/**
+ * Analyzes the SEO metrics of a given URL using PageSpeed Insights.
+ *
+ * @param {Object} req - Express request object. Expects req.body.url and req.body.category as the target URL and category to analyze.
+ * @param {Object} res - Express response object.
+ *
+ * Input:
+ *   - req.body.url: {string} The URL of the page to analyze.
+ *   - req.body.category: {string} The category of analysis ("seo").
+ *
+ * Output (JSON response):
+ *   - seoReport: {string} Human-readable report for SEO metrics.
+ *   - On error: { error: string } with error details.
+ */
 const analyzeSEOMetrics = async (req, res) => {
   try {
     const { url, category } = req.body;
@@ -76,7 +101,7 @@ const analyzeSEOMetrics = async (req, res) => {
       canonical: data.lighthouseResult.audits["canonical"],
     };
 
-    const seoReport = await generateTextReport(filteredData);
+    const seoReport = await generateTextReport(filteredData, CWV_REPORT_PROMPT);
 
     res.status(200).json(seoReport);
   } catch (error) {
@@ -87,48 +112,7 @@ const analyzeSEOMetrics = async (req, res) => {
   }
 };
 
-const analyzeContent = async (req, res) => {
-  const { url } = req.body;
-  console.log("url content", url);
-
-  if (!url) return res.status(400).json({ error: "URL is required" });
-
-  try {
-    const response = await axios.get(url);
-    const html = response.data;
-    const report = await generateJsonReport(html, SEO_CONTENT_REPORT_PROMPT);
-    console.log("analyzeContent report", report);
-    return res.json(report);
-  } catch (error) {
-    console.log("analyzeContent error", error);
-    return res.status(500).json({ error: "Failed to fetch HTML" });
-  }
-};
-
-const getContent = async (req, res) => {
-  try {
-    const { url } = req.body;
-
-    const content = await scrapeSEO(url);
-
-    const report = await generateJsonReport(
-      content,
-      SYSTEM_CONTENT_ANALYSIS_PROMPT
-    );
-    const cleanedReport = report.replace(/```json|```/g, "").trim();
-
-    // Parse the cleaned JSON report
-    const parsedReport = JSON.parse(cleanedReport);
-
-    res.status(200).json({ content, report: parsedReport });
-  } catch (err) {
-    res.status(500).json({ error: err.toString() });
-  }
-};
-
 module.exports = {
   analyzePageSpeed,
   analyzeSEOMetrics,
-  analyzeContent,
-  getContent,
 };
