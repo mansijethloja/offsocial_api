@@ -20,9 +20,9 @@ const transformPageSpeedData = require("../utils/transformData");
  */
 const analyzePageSpeed = async (req, res) => {
   try {
-    const { url, category } = req.body;
-    console.log("url, category", url, category);
-    const data = await fetchPageSpeedData(url, category);
+    const { url, category, strategy } = req.body;
+    console.log("url, category, strategy", url, category, strategy);
+    const data = await fetchPageSpeedData(url, category, strategy);
 
     let performanceReportJson;
     if (category === "PERFORMANCE") {
