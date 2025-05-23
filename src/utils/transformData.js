@@ -69,7 +69,6 @@ const transformPageSpeedData = (rawData) => {
     Object.keys(audits).forEach((auditId) => {
       const audit = audits[auditId];
       const group = auditToGroupMap[auditId];
-      const weight = auditToWeightMap[auditId] || 0;
 
       if (group === "hidden") return;
 
