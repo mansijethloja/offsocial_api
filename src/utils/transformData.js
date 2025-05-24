@@ -1,10 +1,3 @@
-/**
- * Transforms raw Google PageSpeed Insights API response into a structured format
- * for performance category data visualization and analysis
- *
- * @param {Object} rawData - The raw response from Google PageSpeed Insights API
- * @returns {Object} - Transformed data with auditRefs, passedAudits, and categoryGroups
- */
 const transformPageSpeedData = (rawData) => {
   const lighthouseResult = rawData.lighthouseResult;
 
@@ -34,10 +27,18 @@ const transformPageSpeedData = (rawData) => {
     categoryGroups: {},
   };
 
+  const audits = lighthouseResult.audits || {};
+
   if (Array.isArray(performanceCategory.auditRefs)) {
-    result.auditRefs = performanceCategory.auditRefs.filter(
-      (ref) => ref.group === "metrics"
-    );
+    result.auditRefs = performanceCategory.auditRefs
+      .filter((ref) => ref.group === "metrics")
+      .map((ref) => {
+        const audit = audits[ref.id] || {};
+        return {
+          ...ref,
+          score: typeof audit.score === "number" ? audit.score : null,
+        };
+      });
   }
 
   const auditGroups = {};
@@ -54,8 +55,6 @@ const transformPageSpeedData = (rawData) => {
   }
 
   if (lighthouseResult.audits) {
-    const audits = lighthouseResult.audits;
-
     const auditToGroupMap = {};
     const auditToWeightMap = {};
 
@@ -72,7 +71,6 @@ const transformPageSpeedData = (rawData) => {
 
       if (group === "hidden") return;
 
-      //Passed Audit Logic
       const isPassedAudit =
         ((audit.score === 1 && audit.scoreDisplayMode === "metricSavings") ||
           (audit.score === null &&
@@ -87,7 +85,6 @@ const transformPageSpeedData = (rawData) => {
     });
   }
 
-  // Sort and count audits in each group
   Object.keys(auditGroups).forEach((groupKey) => {
     const group = auditGroups[groupKey];
     const sortedAudits = {};
@@ -108,7 +105,6 @@ const transformPageSpeedData = (rawData) => {
     group.count = Object.keys(group.audits).length;
   });
 
-  // Sort passed audits and count them
   const passedAuditIds = Object.keys(result.passedAudits.audits);
   const sortedPassedAudits = {};
 
@@ -125,7 +121,6 @@ const transformPageSpeedData = (rawData) => {
   result.passedAudits.audits = sortedPassedAudits;
   result.passedAudits.count = passedAuditIds.length;
 
-  // Only include category groups that have audits
   result.categoryGroups = Object.fromEntries(
     Object.entries(auditGroups).filter(
       ([_, group]) => Object.keys(group.audits).length > 0
