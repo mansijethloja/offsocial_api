@@ -75,12 +75,18 @@ const getContent = async (req, res) => {
       internalLinkReportJson.replace(/```json|```/g, "").trim()
     );
 
+    const mergedLinkReport = {
+      pageUrl: internalLinkReport.pageUrl,
+      metrics: internalLinkReport.metrics,
+      score: internalLinkReport.score,
+      internalLinkTableReport: parsedInternalLinkReportJson,
+    };
+
     // res
     //   .status(200)
     //   .json({ content, internalLinkReport, report: parsedReport, textReport });
     res.status(200).json({
-      internalLinkReport,
-      internalLinkReportJson: parsedInternalLinkReportJson,
+      internalLinkReport: mergedLinkReport,
       contentReport: {
         tableReport: parsedContentReport,
         textReport: textContentReport,
