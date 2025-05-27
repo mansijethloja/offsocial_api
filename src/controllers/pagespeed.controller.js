@@ -1,7 +1,10 @@
-const { CWV_REPORT_PROMPT } = require("../prompts/seo-report.prompt");
 const { fetchPageSpeedData } = require("../services/pagespeed.service");
-const { generateTextReport } = require("../services/openai.service");
-const transformPageSpeedData = require("../utils/transformData");
+const {
+  transformPerformanceData,
+  transformSeoData,
+  transformBestPracticesData,
+  transformAccessibilityData,
+} = require("../utils/transformData");
 
 /**
  * Analyzes the performance of a given URL using PageSpeed Insights.
@@ -26,29 +29,20 @@ const analyzePageSpeed = async (req, res) => {
 
     let performanceReportJson;
     if (category === "PERFORMANCE") {
-      performanceReportJson = transformPageSpeedData(data);
+      performanceReportJson = transformPerformanceData(data);
     }
 
-    // if (category === "SEO") {
-    //   performanceReportJson = transformLighthouseCategory(
-    //     data.lighthouseResult,
-    //     "seo"
-    //   );
-    // }
+    if (category === "SEO") {
+      performanceReportJson = transformSeoData(data);
+    }
 
-    // if (category === "BEST_PRACTICES") {
-    //   performanceReportJson = transformLighthouseCategory(
-    //     data.lighthouseResult,
-    //     "best-practices"
-    //   );
-    // }
+    if (category === "BEST_PRACTICES") {
+      performanceReportJson = transformBestPracticesData(data);
+    }
 
-    // if (category === "ACCESSIBILITY") {
-    //   performanceReportJson = transformLighthouseCategory(
-    //     data.lighthouseResult,
-    //     "accessibility"
-    //   );
-    // }
+    if (category === "ACCESSIBILITY") {
+      performanceReportJson = transformAccessibilityData(data);
+    }
 
     res.status(200).json({ performanceReportJson });
   } catch (error) {
