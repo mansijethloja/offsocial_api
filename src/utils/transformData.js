@@ -18,6 +18,12 @@ const transformPerformanceData = (rawData) => {
     title: performanceCategory.title,
     score: performanceCategory.score,
     auditRefs: [],
+    metrics: {
+      title: "Metrics",
+      description: "",
+      audits: {},
+      count: 0,
+    },
     passedAudits: {
       title: "Passed Audits",
       description: "",
@@ -29,6 +35,7 @@ const transformPerformanceData = (rawData) => {
 
   const audits = lighthouseResult.audits || {};
 
+  // Process auditRefs for metrics
   if (Array.isArray(performanceCategory.auditRefs)) {
     result.auditRefs = performanceCategory.auditRefs
       .filter((ref) => ref.group === "metrics")
@@ -44,7 +51,8 @@ const transformPerformanceData = (rawData) => {
   const auditGroups = {};
   if (lighthouseResult.categoryGroups) {
     Object.keys(lighthouseResult.categoryGroups).forEach((groupKey) => {
-      if (groupKey !== "hidden") {
+      // Skip 'hidden' and 'metrics' groups (metrics will be handled separately)
+      if (groupKey !== "hidden" && groupKey !== "metrics") {
         auditGroups[groupKey] = {
           ...lighthouseResult.categoryGroups[groupKey],
           audits: {},
@@ -79,12 +87,30 @@ const transformPerformanceData = (rawData) => {
 
       if (isPassedAudit) {
         result.passedAudits.audits[auditId] = audit;
+      } else if (group === "metrics") {
+        // Handle metrics separately
+        result.metrics.audits[auditId] = audit;
       } else if (group && auditGroups[group]) {
         auditGroups[group].audits[auditId] = audit;
       }
     });
   }
 
+  // Sort and count metrics
+  const metricAuditIds = Object.keys(result.metrics.audits);
+  const sortedMetrics = {};
+  metricAuditIds.sort((a, b) => {
+    const titleA = result.metrics.audits[a].title || "";
+    const titleB = result.metrics.audits[b].title || "";
+    return titleA.localeCompare(titleB);
+  });
+  metricAuditIds.forEach((id) => {
+    sortedMetrics[id] = result.metrics.audits[id];
+  });
+  result.metrics.audits = sortedMetrics;
+  result.metrics.count = metricAuditIds.length;
+
+  // Process other category groups
   Object.keys(auditGroups).forEach((groupKey) => {
     const group = auditGroups[groupKey];
     const sortedAudits = {};
@@ -105,22 +131,21 @@ const transformPerformanceData = (rawData) => {
     group.count = Object.keys(group.audits).length;
   });
 
+  // Process passed audits
   const passedAuditIds = Object.keys(result.passedAudits.audits);
   const sortedPassedAudits = {};
-
   passedAuditIds.sort((a, b) => {
     const titleA = result.passedAudits.audits[a].title || "";
     const titleB = result.passedAudits.audits[b].title || "";
     return titleA.localeCompare(titleB);
   });
-
   passedAuditIds.forEach((id) => {
     sortedPassedAudits[id] = result.passedAudits.audits[id];
   });
-
   result.passedAudits.audits = sortedPassedAudits;
   result.passedAudits.count = passedAuditIds.length;
 
+  // Only include non-empty groups
   result.categoryGroups = Object.fromEntries(
     Object.entries(auditGroups).filter(
       ([_, group]) => Object.keys(group.audits).length > 0

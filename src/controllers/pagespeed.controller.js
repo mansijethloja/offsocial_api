@@ -47,7 +47,7 @@ const analyzePageSpeed = async (req, res) => {
     res.status(200).json({ performanceReportJson });
   } catch (error) {
     console.log(error);
-    console.log(error.status);
+    console.log(error.response.status);
     res
       .status(500)
       .json({ error: "Failed to analyze page speed", details: error });
