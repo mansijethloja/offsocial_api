@@ -1,6 +1,13 @@
+/**
+ * Transforms raw Lighthouse performance data into a structured format for the UI
+ * @param {Object} rawData - Raw data from PageSpeed Insights API
+ * @returns {Object} - Structured performance data for the application
+ */
 const transformPerformanceData = (rawData) => {
+  // Extract the Lighthouse result from the raw data
   const lighthouseResult = rawData.lighthouseResult;
 
+  // Validate the response structure
   if (
     !lighthouseResult ||
     !lighthouseResult.categories ||
@@ -11,34 +18,41 @@ const transformPerformanceData = (rawData) => {
     );
   }
 
+  // Get the performance category which contains the main score and audit references
   const performanceCategory = lighthouseResult.categories.performance;
 
+  // Initialize the result structure with separate sections for metrics, passed audits, and other groups
   const result = {
     id: performanceCategory.id,
     title: performanceCategory.title,
     score: performanceCategory.score,
-    auditRefs: [],
+    auditRefs: [], // Will store metric references for gauge charts
     metrics: {
+      // Separate container for core web vitals and metrics
       title: "Metrics",
-      description: "",
-      audits: {},
-      count: 0,
+      description: "Key performance metrics",
+      audits: {}, // Will store individual metric audits
+      count: 0, // Will store count of metrics
     },
     passedAudits: {
+      // Container for audits that passed
       title: "Passed Audits",
       description: "",
       audits: {},
       count: 0,
     },
-    categoryGroups: {},
+    categoryGroups: {}, // Will store all other audit groups (diagnostics, etc.)
   };
 
+  // All audits from the Lighthouse result
   const audits = lighthouseResult.audits || {};
 
-  // Process auditRefs for metrics
+  // STEP 1: Process metric references for the gauge charts
   if (Array.isArray(performanceCategory.auditRefs)) {
     result.auditRefs = performanceCategory.auditRefs
+      // Filter for only metric audits (like LCP, FID, CLS)
       .filter((ref) => ref.group === "metrics")
+      // Map to include both the reference and the audit score
       .map((ref) => {
         const audit = audits[ref.id] || {};
         return {
@@ -48,24 +62,28 @@ const transformPerformanceData = (rawData) => {
       });
   }
 
+  // STEP 2: Initialize audit groups (excluding 'hidden' and 'metrics')
   const auditGroups = {};
   if (lighthouseResult.categoryGroups) {
     Object.keys(lighthouseResult.categoryGroups).forEach((groupKey) => {
-      // Skip 'hidden' and 'metrics' groups (metrics will be handled separately)
+      // Skip hidden group and metrics (metrics are handled separately)
       if (groupKey !== "hidden" && groupKey !== "metrics") {
         auditGroups[groupKey] = {
-          ...lighthouseResult.categoryGroups[groupKey],
-          audits: {},
-          count: 0,
+          ...lighthouseResult.categoryGroups[groupKey], // Copy group info
+          audits: {}, // Will store audits for this group
+          count: 0, // Will store count of audits in group
         };
       }
     });
   }
 
+  // STEP 3: Process all audits and categorize them
   if (lighthouseResult.audits) {
+    // Create maps for quick lookup of audit groups and weights
     const auditToGroupMap = {};
     const auditToWeightMap = {};
 
+    // Populate the group and weight maps from performance audit references
     performanceCategory.auditRefs.forEach((ref) => {
       if (ref.id) {
         auditToGroupMap[ref.id] = ref.group || null;
@@ -73,12 +91,15 @@ const transformPerformanceData = (rawData) => {
       }
     });
 
+    // Process each audit
     Object.keys(audits).forEach((auditId) => {
       const audit = audits[auditId];
       const group = auditToGroupMap[auditId];
 
+      // Skip hidden audits
       if (group === "hidden") return;
 
+      // Determine if this is a passed audit (score=1 or not applicable)
       const isPassedAudit =
         ((audit.score === 1 && audit.scoreDisplayMode === "metricSavings") ||
           (audit.score === null &&
@@ -86,43 +107,50 @@ const transformPerformanceData = (rawData) => {
         group !== "hidden";
 
       if (isPassedAudit) {
+        // Add to passed audits
         result.passedAudits.audits[auditId] = audit;
       } else if (group === "metrics") {
-        // Handle metrics separately
+        // Add to separate metrics container
         result.metrics.audits[auditId] = audit;
       } else if (group && auditGroups[group]) {
+        // Add to appropriate category group
         auditGroups[group].audits[auditId] = audit;
       }
     });
   }
 
-  // Sort and count metrics
+  // STEP 4: Sort and count metrics
   const metricAuditIds = Object.keys(result.metrics.audits);
   const sortedMetrics = {};
+  // Sort metrics alphabetically by title
   metricAuditIds.sort((a, b) => {
     const titleA = result.metrics.audits[a].title || "";
     const titleB = result.metrics.audits[b].title || "";
     return titleA.localeCompare(titleB);
   });
+  // Rebuild metrics object in sorted order
   metricAuditIds.forEach((id) => {
     sortedMetrics[id] = result.metrics.audits[id];
   });
   result.metrics.audits = sortedMetrics;
   result.metrics.count = metricAuditIds.length;
 
-  // Process other category groups
+  // STEP 5: Process other category groups (diagnostics, etc.)
   Object.keys(auditGroups).forEach((groupKey) => {
     const group = auditGroups[groupKey];
     const sortedAudits = {};
 
+    // Sort audits by score (worst first)
     const auditKeys = Object.keys(group.audits).sort((a, b) => {
       const auditA = group.audits[a];
       const auditB = group.audits[b];
+      // Treat null scores as passing (1)
       const scoreA = typeof auditA.score === "number" ? auditA.score : 1;
       const scoreB = typeof auditB.score === "number" ? auditB.score : 1;
-      return scoreA - scoreB;
+      return scoreA - scoreB; // Sort ascending (0.1 comes before 0.9)
     });
 
+    // Rebuild group audits in sorted order
     auditKeys.forEach((key) => {
       sortedAudits[key] = group.audits[key];
     });
@@ -131,21 +159,23 @@ const transformPerformanceData = (rawData) => {
     group.count = Object.keys(group.audits).length;
   });
 
-  // Process passed audits
+  // STEP 6: Process passed audits
   const passedAuditIds = Object.keys(result.passedAudits.audits);
   const sortedPassedAudits = {};
+  // Sort passed audits alphabetically
   passedAuditIds.sort((a, b) => {
     const titleA = result.passedAudits.audits[a].title || "";
     const titleB = result.passedAudits.audits[b].title || "";
     return titleA.localeCompare(titleB);
   });
+  // Rebuild passed audits in sorted order
   passedAuditIds.forEach((id) => {
     sortedPassedAudits[id] = result.passedAudits.audits[id];
   });
   result.passedAudits.audits = sortedPassedAudits;
   result.passedAudits.count = passedAuditIds.length;
 
-  // Only include non-empty groups
+  // STEP 7: Finalize category groups - only include non-empty groups
   result.categoryGroups = Object.fromEntries(
     Object.entries(auditGroups).filter(
       ([_, group]) => Object.keys(group.audits).length > 0
