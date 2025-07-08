@@ -27,9 +27,8 @@ const validateAnalysisRequest = (body) => {
  * Handle business DNA analysis request
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const handleAnalyzeBusinessDNA = async (req, res, next) => {
+const handleAnalyzeBusinessDNA = async (req, res) => {
   try {
     // Validate request body
     const { error, value } = validateAnalysisRequest(req.body);
@@ -104,96 +103,7 @@ const handleAnalyzeBusinessDNA = async (req, res, next) => {
   }
 };
 
-/**
- * Handle health check request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const handleHealthCheck = async (req, res) => {
-  try {
-    const healthInfo = {
-      success: true,
-      message: "Business DNA Analysis API is running",
-      timestamp: new Date().toISOString(),
-      version: "1.0.0",
-      environment: process.env.NODE_ENV || "development",
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      statusCode: 200,
-    };
-
-    return res.status(200).json(healthInfo);
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Health check failed",
-      error: error.message,
-      statusCode: 500,
-      timestamp: new Date().toISOString(),
-    });
-  }
-};
-
-/**
- * Handle API info request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const handleApiInfo = async (req, res) => {
-  try {
-    const apiInfo = {
-      success: true,
-      message: "Business DNA Analysis API Information",
-      api: {
-        name: "Business DNA Analysis API",
-        version: "1.0.0",
-        description: "Analyze website business DNA using Perplexity AI",
-        endpoints: {
-          analyze: {
-            method: "POST",
-            path: "/api/business-dna/analyze",
-            description: "Analyze business DNA for a website URL",
-            requestBody: {
-              url: "string (required) - Website URL to analyze",
-            },
-          },
-          health: {
-            method: "GET",
-            path: "/api/business-dna/health",
-            description: "API health check endpoint",
-          },
-          info: {
-            method: "GET",
-            path: "/api/business-dna/info",
-            description: "Get API documentation and usage information",
-          },
-        },
-      },
-      usage: {
-        authentication: "Set PERPLEXITY_API_KEY environment variable",
-        rateLimit: "Subject to Perplexity API rate limits",
-        supportedModels: ["sonar-pro"],
-        maxResponseTime: "300 seconds",
-      },
-      statusCode: 200,
-      timestamp: new Date().toISOString(),
-    };
-
-    return res.status(200).json(apiInfo);
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to retrieve API information",
-      error: error.message,
-      statusCode: 500,
-      timestamp: new Date().toISOString(),
-    });
-  }
-};
-
 module.exports = {
   handleAnalyzeBusinessDNA,
-  handleHealthCheck,
-  handleApiInfo,
   validateAnalysisRequest,
 };

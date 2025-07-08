@@ -6,7 +6,6 @@ const puppeteer = require("puppeteer");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-// Node.js function for Business Identity (raw code)
 /**
  * Scrape Business Identity from a given website URL
  * @param {string} url - The website URL to scrape
