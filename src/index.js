@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
+const { connectDB } = require("./config/database");
 
 const pageSpeedRoutes = require("./routes/pagespeed.route");
 const contentRoutes = require("./routes/content.route");
@@ -13,6 +14,18 @@ const businessDNARoutes = require("./routes/business-dna.route");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+/**
+ * Connect to MongoDB
+ */
+connectDB()
+  .then(() => {
+    console.log("MongoDB connection established successfully");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+    // Continue running the app even if database connection fails
+  });
 
 /**
  * Rate limiting middleware
