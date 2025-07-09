@@ -6,14 +6,16 @@ const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const { connectDB } = require("./config/database");
+const passport = require("passport");
+const { configurePassport } = require("./config/passport");
 
 const pageSpeedRoutes = require("./routes/pagespeed.route");
 const contentRoutes = require("./routes/content.route");
-const leadRoutes = require("./routes/lead.route");
 const businessDNARoutes = require("./routes/business-dna.route");
+const authRoutes = require("./routes/auth.route");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 /**
  * Connect to MongoDB
@@ -24,7 +26,6 @@ connectDB()
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err.message);
-    // Continue running the app even if database connection fails
   });
 
 /**
@@ -109,14 +110,20 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Initialize Passport
+ */
+configurePassport();
+app.use(passport.initialize());
+
+/**
  * Apply rate limiting
  */
 app.use("/api/", limiter);
 
 app.use("/api/pagespeed", pageSpeedRoutes);
 app.use("/api/content", contentRoutes);
-app.use("/api/leads", leadRoutes);
 app.use("/api/business-dna", businessDNARoutes);
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

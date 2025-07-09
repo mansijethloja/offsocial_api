@@ -27,10 +27,6 @@ OffSocial API is a powerful website analysis tool designed to extract and analyz
 - Content quality assessment
 - SEO friendliness evaluation
 
-### Lead Generation
-- Lead capture and qualification
-- Lead scoring and categorization
-
 ## Tech Stack
 
 - **Backend**: Node.js, Express.js
@@ -64,7 +60,7 @@ OffSocial API is a powerful website analysis tool designed to extract and analyz
 
 3. Create a `.env` file in the root directory with the following variables:
    ```
-   PORT=5000
+   PORT=8000
    OPENAI_API_KEY=your_openai_api_key
    PAGESPEED_API_KEY=your_pagespeed_api_key
    BASE_URL=https://www.googleapis.com/pagespeedonline/v5/runPagespeed
