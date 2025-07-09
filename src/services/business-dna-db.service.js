@@ -78,8 +78,8 @@ const getAllBusinessDNA = async (filters = {}, limit = 10, skip = 0) => {
       .limit(limit)
       .skip(skip);
       
-    const businessDNAs = await query.exec();
-    return businessDNAs;
+    const businessDNA = await query.exec();
+    return businessDNA;
   } catch (error) {
     console.error('Error retrieving business DNA records from database:', error);
     throw new Error(`Database error: ${error.message}`);

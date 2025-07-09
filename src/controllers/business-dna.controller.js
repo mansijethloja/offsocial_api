@@ -56,23 +56,22 @@ const handleAnalyzeBusinessDNA = async (req, res) => {
     console.log(
       `[${new Date().toISOString()}] Business DNA analysis completed successfully for: ${url}`
     );
-    
+
     // Store the analysis result in the database
     try {
       const storedData = await createBusinessDNA(result.data, url, primaryGoal);
       console.log(
-        `[${new Date().toISOString()}] Business DNA stored in database with ID: ${storedData._id}`
+        `[${new Date().toISOString()}] Business DNA stored in database with ID: ${
+          storedData._id
+        }`
       );
     } catch (dbError) {
-      // Log database error but don't fail the request
       console.error(
         `[${new Date().toISOString()}] Error storing business DNA in database:`,
         dbError.message
       );
-      // We'll continue and return the analysis result even if DB storage fails
     }
 
-    // Return successful response
     return res.status(200).json({
       success: true,
       message: "Business DNA analysis completed successfully",
@@ -85,7 +84,6 @@ const handleAnalyzeBusinessDNA = async (req, res) => {
       error.message
     );
 
-    // Determine error type and status code
     let statusCode = 500;
     let errorType = "Server Error";
 
