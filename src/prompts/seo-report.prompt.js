@@ -1,7 +1,7 @@
 const CWV_REPORT_PROMPT = `You are a web performance expert. Analyze the JSON data from Google PageSpeed Insights. For each metric, generate a concise, technical, structured, and easy to understand report using the format below. Avoid large fonts.Before each metric add 3 line breaks. Format per metric:
  - Metric Name(must use ## for heading):
     - Description: What it measures and why it matters (short).
-    - Score: Value between 0–1.
+    - Score: Value between 0-1.
     - Performance: Actual measured value (e.g., ms or unitless).
     - Findings: Good/bad performance insights.
     - Recommendations: Actionable steps to improve.
@@ -139,6 +139,74 @@ Return only a valid JSON array. Do not include markdown formatting, code blocks,
 
 const BLOG_TOPIC_SUGGESTION_PROMPT = `Based on below content, what are the blog topic you would suggest?`;
 
+const BUSINESS_DNA_PROMPT = `Analyze the following website URL and generate a structured detailed digital brand audit using public data (website, social media, ads, SEO, and competitors).
+
+Input:
+Website URL: 
+Primary Goal:
+
+Instructions:
+Use publicly available data to infer the business identity, branding strategy, positioning, and engagement approach. Set any missing/unavailable data to null. Return only a JSON object with the exact structure below.
+
+{
+  "business_description": {
+    "short_introduction": "<1-2 sentence summary>",
+    "long_description": "<About Us summary>",
+    "mission_vision": "<Mission or Vision statements>",
+    "tagline": "<Tagline or slogan>"
+  },
+  "brand_evaluation": {
+    "core_message": "<Identify core message from content.>",
+    "brand_voice": "<Identify how the brand sounds (e.g. bold, playful) from content.>",
+    "value_proposition": "<Check if value proposition is clearly communicated.>"
+  },
+  "products_services": {
+    "offerings": [
+      {
+        "category": "<Category label>",
+        "items": ["<Offering 1>", "<Offering 2>", "..."]
+      }
+    ]
+  },
+  "target_audience": {
+    "primary_segments": ["<Who the website is speaking to (e.g., B2B/B2C, industry, persona types)>"],
+    "use_cases": ["<Example use cases>"],
+    "industries_served": ["<List of industries served>"]
+  },
+  "usps": {
+    "core_differentiators": [<Core value props or differentiators>],
+    "themes": [<Common themes: affordability, innovation, speed, customization, etc.>]
+  },
+  "tone_of_voice": {
+    "sentiment": [<Formal, friendly, tech-savvy, playful, etc.>],
+    "style_classification": [<Direct>, <Technical>, ...]
+  },
+  "competitor_industry_positioning": {
+    "inferred_competitors": [
+      {
+        "brand": "<Competitor Brand Name>",
+        "web_presence": "<Website quality/strength>",
+        "visual_identity": "<Design strengths>",
+        "social_strategy": "<How they use social media>",
+        "engagement": "<Level of interaction or follower growth>"
+      }
+    ],
+    "industry_niche": "<Niche (e.g., SaaS CRM tools, eco-cleaning D2C)>",
+    "market_positioning": "<Premium, budget, niche, mainstream>"
+  },
+  "branding_elements": {
+    "color_palette": "<Hex codes or names if extractable>",
+    "typography": "<Font names or style>",
+    "imagery_themes": ["<e.g., lifestyle photography, illustrations>"],
+    "consistency_notes": "<Consistency across pages or platforms>"
+  },
+  "call_to_actions": {
+    "primary_ctas": ["<e.g., Book a Demo, Try for Free>"],
+    "placement_strategy": ["<e.g., homepage hero, sticky header>"],
+    "engagement_flow": "<How CTAs guide the user journey>"
+  }
+}`;
+
 module.exports = {
   CWV_REPORT_PROMPT,
   SEO_CONTENT_REPORT_PROMPT,
@@ -150,4 +218,5 @@ module.exports = {
   HEADINGS_ANALYSIS_PROMPT,
   HEADINGS_SUGGESTION_PROMPT,
   BLOG_TOPIC_SUGGESTION_PROMPT,
+  BUSINESS_DNA_PROMPT,
 };

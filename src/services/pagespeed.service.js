@@ -1,15 +1,16 @@
 const axios = require("axios");
 
 const BASE_URL = process.env.BASE_URL;
-const GOOGLE_PSI_API_KEY = process.env.GOOGLE_PSI_API_KEY;
+const PAGESPEED_API_KEY = process.env.PAGESPEED_API_KEY;
 
-const fetchPageSpeedData = async (url, category) => {
+const fetchPageSpeedData = async (url, category, strategy) => {
   try {
     const response = await axios.get(BASE_URL, {
       params: {
         url,
         category,
-        key: GOOGLE_PSI_API_KEY,
+        strategy,
+        key: PAGESPEED_API_KEY,
       },
     });
     return response.data;

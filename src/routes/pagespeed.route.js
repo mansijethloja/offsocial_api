@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const {
-  analyzePageSpeed,
-  analyzeSEOMetrics,
-} = require("../controllers/pagespeed.controller");
+const { analyzePageSpeed } = require("../controllers/pagespeed.controller");
+const { authenticateJWT } = require('../middlewares/auth.middleware');
 
-router.post("/performance", analyzePageSpeed);
-router.post("/seo", analyzeSEOMetrics);
+/**
+ * @route   POST /api/pagespeed/lighthouse
+ * @desc    Analyze page speed using Google Lighthouse
+ * @access  Private
+ */
+router.post("/lighthouse", authenticateJWT, analyzePageSpeed);
 
 module.exports = router;
