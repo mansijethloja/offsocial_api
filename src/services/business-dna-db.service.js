@@ -4,10 +4,9 @@ const BusinessDNA = require('../models/business-dna.model');
  * Creates a new business DNA record in the database
  * @param {Object} data - Business DNA analysis data
  * @param {string} url - Website URL that was analyzed
- * @param {string} primaryGoal - Primary goal for the website
  * @returns {Promise<Object>} - Created business DNA document
  */
-const createBusinessDNA = async (data, url, primaryGoal) => {
+const createBusinessDNA = async (data, url) => {
   try {
     // Extract data from the analysis result
     const { businessDNA, businessIdentity } = data;
@@ -25,7 +24,6 @@ const createBusinessDNA = async (data, url, primaryGoal) => {
       // Update existing record
       existingAnalysis.businessDNA = businessDNA;
       existingAnalysis.businessIdentity = enhancedBusinessIdentity;
-      existingAnalysis.primaryGoal = primaryGoal;
       existingAnalysis.analysisDate = new Date();
       
       await existingAnalysis.save();
@@ -34,7 +32,6 @@ const createBusinessDNA = async (data, url, primaryGoal) => {
       // Create new record
       const newBusinessDNA = new BusinessDNA({
         websiteUrl: url,
-        primaryGoal,
         businessIdentity: enhancedBusinessIdentity,
         businessDNA,
         analysisDate: new Date()

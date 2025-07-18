@@ -10,9 +10,6 @@ const analysisSchema = Joi.object({
     "string.uri": "Please provide a valid URL",
     "any.required": "URL is required",
   }),
-  primaryGoal: Joi.string().required().messages({
-    "any.required": "Primary goal is required",
-  }),
 });
 
 /**
@@ -43,7 +40,7 @@ const handleAnalyzeBusinessDNA = async (req, res) => {
       });
     }
 
-    const { url, primaryGoal } = value;
+    const { url } = value;
 
     // Log the analysis request
     console.log(
@@ -51,7 +48,7 @@ const handleAnalyzeBusinessDNA = async (req, res) => {
     );
 
     // Perform business DNA analysis
-    const result = await analyzeBusinessDNA(url, primaryGoal);
+    const result = await analyzeBusinessDNA(url);
 
     console.log(
       `[${new Date().toISOString()}] Business DNA analysis completed successfully for: ${url}`
@@ -59,7 +56,7 @@ const handleAnalyzeBusinessDNA = async (req, res) => {
 
     // Store the analysis result in the database
     try {
-      const storedData = await createBusinessDNA(result.data, url, primaryGoal);
+      const storedData = await createBusinessDNA(result.data, url);
       console.log(
         `[${new Date().toISOString()}] Business DNA stored in database with ID: ${
           storedData._id

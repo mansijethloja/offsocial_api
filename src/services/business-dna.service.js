@@ -119,16 +119,12 @@ async function getWebsiteStatus(websiteUrl) {
 /**
  * Generate business DNA prompt for Perplexity
  * @param {string} url - Website URL to analyze
- * @param {string} primaryGoal - Primary goal for the website
  * @returns {string} - Formatted prompt for business analysis
  */
-const generateBusinessDNAPrompt = (url, primaryGoal) => {
+const generateBusinessDNAPrompt = (url) => {
   return `Analyze the following website URL and generate a structured detailed digital brand audit using public data (website, social media, ads, SEO, and competitors).
-
 Input:
 Website URL: ${url}
-Primary Goal: ${primaryGoal}
-
 Instructions:
 Use publicly available data to infer the business identity, branding strategy, positioning, and engagement approach. Set any missing/unavailable data to null. Return only a JSON object with the exact structure below.
 
